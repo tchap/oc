@@ -3,12 +3,11 @@ package login
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/containers/image/v5/docker"
 	dockerconfig "github.com/containers/image/v5/pkg/docker/config"
 	containertypes "github.com/containers/image/v5/types"
 	"github.com/spf13/cobra"
@@ -19,14 +18,12 @@ import (
 	apirequest "k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/cli-runtime/pkg/genericiooptions"
 	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/homedir"
 	kcmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/templates"
 
 	imageclient "github.com/openshift/client-go/image/clientset/versioned"
 	"github.com/openshift/library-go/pkg/image/reference"
-	"github.com/openshift/library-go/pkg/image/registryclient"
 	"github.com/openshift/oc/pkg/helpers/image"
 )
 
@@ -99,6 +96,7 @@ type LoginOptions struct {
 
 func NewRegistryLoginOptions(streams genericiooptions.IOStreams) *LoginOptions {
 	return &LoginOptions{
+		SkipCheck: true,
 		IOStreams: streams,
 	}
 }
@@ -281,23 +279,19 @@ func (o *LoginOptions) Validate() error {
 }
 
 func (o *LoginOptions) Run() error {
+	sysCtx := &containertypes.SystemContext{
+		AuthFilePath:                o.ConfigFile,
+		DockerInsecureSkipTLSVerify: containertypes.NewOptionalBool(o.Insecure),
+	}
+
 	if !o.SkipCheck {
 		ctx := apirequest.NewContext()
-		creds := registryclient.NewBasicCredentials()
-		hostPortURL := &url.URL{Host: o.HostPort}
-		creds.Add(hostPortURL, o.Credentials.Username, o.Credentials.Password)
-		insecureRT, err := rest.TransportFor(&rest.Config{TLSClientConfig: rest.TLSClientConfig{Insecure: true}, UserAgent: rest.DefaultKubernetesUserAgent()})
-		if err != nil {
-			return err
-		}
-		c := registryclient.NewContext(http.DefaultTransport, insecureRT).WithCredentials(creds)
-		if _, err := c.Repository(ctx, hostPortURL, "does_not_exist", o.Insecure); err != nil {
+		if err := docker.CheckAuth(ctx, sysCtx, o.Credentials.Username, o.Credentials.Password, o.HostPort); err != nil {
 			return fmt.Errorf("unable to check your credentials - pass --skip-check to bypass this error: %v", err)
 		}
 	}
 
-	ctx := &containertypes.SystemContext{AuthFilePath: o.ConfigFile}
-	credentialLocation, err := dockerconfig.SetCredentials(ctx, o.HostPort, o.Credentials.Username, o.Credentials.Password)
+	credentialLocation, err := dockerconfig.SetCredentials(sysCtx, o.HostPort, o.Credentials.Username, o.Credentials.Password)
 	if err != nil {
 		return err
 	}
