@@ -26,7 +26,7 @@ import (
 	"k8s.io/kubectl/pkg/util/templates"
 
 	"github.com/openshift/library-go/pkg/image/dockerv1client"
-	"github.com/openshift/library-go/pkg/image/registryclient"
+	"github.com/openshift/oc/internal/regutil"
 	"github.com/openshift/oc/pkg/cli/image/imagesource"
 	imagemanifest "github.com/openshift/oc/pkg/cli/image/manifest"
 	"github.com/openshift/oc/pkg/cli/image/strategy"
@@ -458,7 +458,7 @@ func (o *ImageRetriever) Images(ctx context.Context, refs map[string]imagesource
 				}
 
 				for srcDigest, srcManifest := range allManifests {
-					contentDigest, contentErr := registryclient.ContentDigestForManifest(srcManifest, srcDigest.Algorithm())
+					contentDigest, contentErr := regutil.ContentDigestForManifest(srcManifest, srcDigest.Algorithm())
 					if contentErr != nil {
 						return callbackFn(name, nil, contentErr)
 					}
