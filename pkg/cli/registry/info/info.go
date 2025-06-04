@@ -3,10 +3,8 @@ package info
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"net/url"
-
-	"github.com/distribution/distribution/v3/registry/client/transport"
+	"github.com/regclient/regclient/scheme/reg"
+	"github.com/regclient/regclient/types/ref"
 	"github.com/spf13/cobra"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,7 +16,6 @@ import (
 
 	imageclient "github.com/openshift/client-go/image/clientset/versioned"
 	"github.com/openshift/library-go/pkg/image/reference"
-	"github.com/openshift/library-go/pkg/image/registryclient"
 )
 
 var (
@@ -186,14 +183,11 @@ func (o *Options) Run() error {
 		if !public && !o.ShowInternal {
 			fmt.Fprintf(o.ErrOut, "info: Registry does not have a public hostname\n")
 		}
-		url := &url.URL{Host: host}
-		c := registryclient.NewContext(http.DefaultTransport, http.DefaultTransport).
-			WithRequestModifiers(transport.NewHeaderRequestModifier(http.Header{http.CanonicalHeaderKey("User-Agent"): []string{rest.DefaultKubernetesUserAgent()}}))
-		_, src, err := c.Ping(ctx, url, false)
-		if err != nil {
-			return fmt.Errorf("registry could not be contacted at %s: %v", url.Host, err)
+
+		r := reg.New(reg.WithUserAgent(rest.DefaultKubernetesUserAgent()))
+		if _, err := r.Ping(ctx, ref.Ref{Registry: host}); err != nil {
+			return fmt.Errorf("registry could not be contacted at %s: %v", host, err)
 		}
-		host = src.Host
 	}
 
 	if !o.Quiet {
