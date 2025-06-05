@@ -21,7 +21,7 @@ import (
 	"github.com/distribution/distribution/v3"
 	"github.com/distribution/distribution/v3/manifest/manifestlist"
 	"github.com/distribution/distribution/v3/manifest/schema2"
-	"github.com/distribution/distribution/v3/reference"
+	"github.com/distribution/reference"
 	"github.com/distribution/distribution/v3/registry/api/errcode"
 	registryclient "github.com/distribution/distribution/v3/registry/client"
 	"github.com/distribution/distribution/v3/registry/client/auth"
