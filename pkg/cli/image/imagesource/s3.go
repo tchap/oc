@@ -23,9 +23,10 @@ import (
 
 	"github.com/distribution/distribution/v3"
 	"github.com/distribution/distribution/v3/reference"
-	"github.com/distribution/distribution/v3/registry/client/auth"
-	"github.com/distribution/distribution/v3/registry/client/transport"
 	godigest "github.com/opencontainers/go-digest"
+
+	"github.com/openshift/oc/internal/http/transport"
+	"github.com/openshift/oc/internal/image/registryclient/auth"
 )
 
 type s3Driver struct {
@@ -91,7 +92,7 @@ func (d *s3Driver) newObject(server *url.URL, region string, insecure bool, secu
 
 	if d.UserAgent != "" {
 		awsConfig.WithHTTPClient(&http.Client{
-			Transport: transport.NewTransport(http.DefaultTransport, transport.NewHeaderRequestModifier(http.Header{http.CanonicalHeaderKey("User-Agent"): []string{d.UserAgent}})),
+			Transport: transport.NewTransport(http.DefaultTransport, transport.SetUserAgent(d.UserAgent)),
 		})
 	}
 	s, err := session.NewSession(awsConfig)
