@@ -22,7 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
 	"github.com/distribution/distribution/v3"
-	"github.com/distribution/distribution/v3/reference"
+	"github.com/distribution/reference"
 	godigest "github.com/opencontainers/go-digest"
 
 	"github.com/openshift/oc/internal/http/transport"
