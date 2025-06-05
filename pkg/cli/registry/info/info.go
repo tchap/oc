@@ -17,8 +17,8 @@ import (
 	"k8s.io/kubectl/pkg/util/templates"
 
 	imageclient "github.com/openshift/client-go/image/clientset/versioned"
-	"github.com/openshift/library-go/pkg/image/reference"
-	"github.com/openshift/library-go/pkg/image/registryclient"
+	"github.com/openshift/oc/internal/image/reference"
+	"github.com/openshift/oc/internal/image/registryclient"
 )
 
 var (

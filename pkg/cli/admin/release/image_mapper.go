@@ -17,7 +17,7 @@ import (
 	"github.com/blang/semver"
 	"github.com/ghodss/yaml"
 	imageapi "github.com/openshift/api/image/v1"
-	imagereference "github.com/openshift/library-go/pkg/image/reference"
+	imagereference "github.com/openshift/oc/internal/image/reference"
 )
 
 type Payload struct {

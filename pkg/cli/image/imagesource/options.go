@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/distribution/distribution/v3"
-	"github.com/openshift/library-go/pkg/image/registryclient"
+	"github.com/openshift/oc/internal/image/registryclient"
 	"k8s.io/klog/v2"
 )
 

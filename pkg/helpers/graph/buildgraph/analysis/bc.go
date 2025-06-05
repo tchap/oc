@@ -13,7 +13,7 @@ import (
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	"github.com/openshift/library-go/pkg/image/imageutil"
-	"github.com/openshift/library-go/pkg/image/reference"
+	"github.com/openshift/oc/internal/image/reference"
 	buildedges "github.com/openshift/oc/pkg/helpers/graph/buildgraph"
 	buildgraph "github.com/openshift/oc/pkg/helpers/graph/buildgraph/nodes"
 	osgraph "github.com/openshift/oc/pkg/helpers/graph/genericgraph"

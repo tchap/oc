@@ -11,7 +11,7 @@ import (
 	apicfgv1 "github.com/openshift/api/config/v1"
 
 	operatorv1alpha1 "github.com/openshift/api/operator/v1alpha1"
-	"github.com/openshift/library-go/pkg/image/reference"
+	"github.com/openshift/oc/internal/image/reference"
 )
 
 func TestOnErrorICSPStrategy(t *testing.T) {

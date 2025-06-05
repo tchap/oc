@@ -22,7 +22,7 @@ import (
 	imagev1 "github.com/openshift/api/image/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	"github.com/openshift/library-go/pkg/image/imageutil"
-	"github.com/openshift/library-go/pkg/image/reference"
+	"github.com/openshift/oc/internal/image/reference"
 	buildhelpers "github.com/openshift/oc/pkg/helpers/build"
 	imagehelpers "github.com/openshift/oc/pkg/helpers/image"
 )

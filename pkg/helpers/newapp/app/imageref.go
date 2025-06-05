@@ -20,7 +20,7 @@ import (
 	imagev1 "github.com/openshift/api/image/v1"
 	"github.com/openshift/library-go/pkg/build/naming"
 	"github.com/openshift/library-go/pkg/image/imageutil"
-	"github.com/openshift/library-go/pkg/image/reference"
+	"github.com/openshift/oc/internal/image/reference"
 	"github.com/openshift/oc/pkg/helpers/newapp/docker/dockerfile"
 	"github.com/openshift/oc/pkg/helpers/newapp/portutils"
 )

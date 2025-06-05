@@ -14,7 +14,7 @@ import (
 	godigest "github.com/opencontainers/go-digest"
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	"github.com/openshift/library-go/pkg/image/reference"
+	"github.com/openshift/oc/internal/image/reference"
 	"github.com/openshift/oc/pkg/cli/image/imagesource"
 )
 

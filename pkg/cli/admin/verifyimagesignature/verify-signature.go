@@ -25,7 +25,7 @@ import (
 	imagev1 "github.com/openshift/api/image/v1"
 	imagev1typedclient "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
 	userv1typedclient "github.com/openshift/client-go/user/clientset/versioned/typed/user/v1"
-	imageref "github.com/openshift/library-go/pkg/image/reference"
+	imageref "github.com/openshift/oc/internal/image/reference"
 	ocmdhelpers "github.com/openshift/oc/pkg/helpers/cmd"
 )
 

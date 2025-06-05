@@ -40,7 +40,7 @@ import (
 	imageclient "github.com/openshift/client-go/image/clientset/versioned"
 	"github.com/openshift/library-go/pkg/image/dockerv1client"
 	"github.com/openshift/library-go/pkg/image/imageutil"
-	imagereference "github.com/openshift/library-go/pkg/image/reference"
+	imagereference "github.com/openshift/oc/internal/image/reference"
 	imageappend "github.com/openshift/oc/pkg/cli/image/append"
 	"github.com/openshift/oc/pkg/cli/image/extract"
 	"github.com/openshift/oc/pkg/cli/image/imagesource"

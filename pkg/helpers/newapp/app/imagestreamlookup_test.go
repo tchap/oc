@@ -14,7 +14,7 @@ import (
 	imagev1 "github.com/openshift/api/image/v1"
 	imagefake "github.com/openshift/client-go/image/clientset/versioned/fake"
 	imagev1client "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
-	"github.com/openshift/library-go/pkg/image/reference"
+	"github.com/openshift/oc/internal/image/reference"
 )
 
 func testImageStreamClient(imageStreams *imagev1.ImageStreamList, images map[string]*imagev1.ImageStreamImage) imagev1client.ImageV1Interface {

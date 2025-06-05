@@ -13,8 +13,8 @@ import (
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
 
 	imagev1 "github.com/openshift/api/image/v1"
-	"github.com/openshift/library-go/pkg/image/reference"
 	"github.com/openshift/library-go/pkg/network/networkutils"
+	"github.com/openshift/oc/internal/image/reference"
 )
 
 // order younger images before older

@@ -27,7 +27,7 @@ import (
 
 	"github.com/openshift/api/image/docker10"
 	"github.com/openshift/library-go/pkg/image/dockerv1client"
-	"github.com/openshift/library-go/pkg/image/registryclient"
+	"github.com/openshift/oc/internal/image/registryclient"
 	"github.com/openshift/oc/pkg/cli/image/imagesource"
 	imagemanifest "github.com/openshift/oc/pkg/cli/image/manifest"
 	"github.com/openshift/oc/pkg/cli/image/workqueue"

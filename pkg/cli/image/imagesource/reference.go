@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/openshift/library-go/pkg/image/reference"
+	"github.com/openshift/oc/internal/image/reference"
 )
 
 // ErrAlreadyExists may be returned by the blob Create function to indicate that the blob already exists.

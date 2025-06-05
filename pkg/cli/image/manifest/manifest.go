@@ -28,8 +28,8 @@ import (
 
 	imagespecv1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/openshift/library-go/pkg/image/dockerv1client"
-	imagereference "github.com/openshift/library-go/pkg/image/reference"
-	"github.com/openshift/library-go/pkg/image/registryclient"
+	imagereference "github.com/openshift/oc/internal/image/reference"
+	"github.com/openshift/oc/internal/image/registryclient"
 	"github.com/openshift/oc/pkg/cli/image/manifest/dockercredentials"
 	"github.com/openshift/oc/pkg/helpers/image/dockerlayer/add"
 )

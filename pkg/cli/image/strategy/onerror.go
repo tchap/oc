@@ -17,8 +17,8 @@ import (
 	operatorv1alpha1 "github.com/openshift/api/operator/v1alpha1"
 	apicfgv1scheme "github.com/openshift/client-go/config/clientset/versioned/scheme"
 	operatorv1alpha1scheme "github.com/openshift/client-go/operator/clientset/versioned/scheme"
-	"github.com/openshift/library-go/pkg/image/reference"
-	"github.com/openshift/library-go/pkg/image/registryclient"
+	"github.com/openshift/oc/internal/image/reference"
+	"github.com/openshift/oc/internal/image/registryclient"
 	utilyaml "k8s.io/apimachinery/pkg/util/yaml"
 )
 

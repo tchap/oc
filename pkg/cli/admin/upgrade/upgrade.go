@@ -23,7 +23,7 @@ import (
 
 	configv1 "github.com/openshift/api/config/v1"
 	configv1client "github.com/openshift/client-go/config/clientset/versioned"
-	imagereference "github.com/openshift/library-go/pkg/image/reference"
+	imagereference "github.com/openshift/oc/internal/image/reference"
 
 	"github.com/openshift/oc/pkg/cli/admin/upgrade/channel"
 	"github.com/openshift/oc/pkg/cli/admin/upgrade/recommend"

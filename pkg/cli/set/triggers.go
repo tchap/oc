@@ -33,9 +33,9 @@ import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	"github.com/openshift/library-go/pkg/build/buildutil"
-	"github.com/openshift/library-go/pkg/image/reference"
 	ometa "github.com/openshift/library-go/pkg/image/referencemutator"
 	triggerutil "github.com/openshift/library-go/pkg/image/trigger"
+	"github.com/openshift/oc/internal/image/reference"
 	"github.com/openshift/oc/pkg/helpers/newapp/app"
 )
 
