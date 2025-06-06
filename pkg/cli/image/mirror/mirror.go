@@ -12,7 +12,6 @@ import (
 	"github.com/distribution/distribution/v3"
 	"github.com/distribution/distribution/v3/manifest/manifestlist"
 	"github.com/distribution/distribution/v3/manifest/ocischema"
-	"github.com/distribution/distribution/v3/manifest/schema1"
 	"github.com/distribution/distribution/v3/manifest/schema2"
 	"github.com/distribution/distribution/v3/registry/client"
 	"github.com/distribution/reference"
@@ -609,7 +608,6 @@ func (o *MirrorImageOptions) plan() (*plan, error) {
 								addBlobsForManifest := func(srcManifest distribution.Manifest) {
 									switch srcManifest.(type) {
 									case *schema2.DeserializedManifest:
-									case *schema1.SignedManifest:
 									case *ocischema.DeserializedManifest:
 									case *manifestlist.DeserializedManifestList:
 										// we do not need to upload layers in a manifestlist

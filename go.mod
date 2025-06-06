@@ -213,6 +213,4 @@ replace github.com/apcera/gssapi => github.com/openshift/gssapi v0.0.0-201610102
 
 replace github.com/distribution/distribution/v3/registry/client => ./internal/distribution/v3/registry/client
 
-replace github.com/distribution/distribution/v3/manifest/schema1 => ./internal/distribution/v3/manifest/schema1
-
 replace github.com/openshift/library-go => ../library-go
