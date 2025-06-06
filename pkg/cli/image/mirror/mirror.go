@@ -28,6 +28,7 @@ import (
 	"k8s.io/kubectl/pkg/util/templates"
 
 	"github.com/openshift/library-go/pkg/image/registryclient"
+	"github.com/openshift/library-go/pkg/image/registryclient/clienterrors"
 	"github.com/openshift/oc/pkg/cli/image/imagesource"
 	imagemanifest "github.com/openshift/oc/pkg/cli/image/manifest"
 	"github.com/openshift/oc/pkg/cli/image/workqueue"
@@ -525,7 +526,7 @@ func (o *MirrorImageOptions) plan() (*plan, error) {
 						srcDigest := godigest.Digest(srcDigestString)
 						srcManifest, err := manifests.Get(ctx, godigest.Digest(srcDigest), imagemanifest.PreferManifestList)
 						if err != nil {
-							var unexpectedHTTPResponseError *registryclient.UnexpectedHTTPResponseError
+							var unexpectedHTTPResponseError *clienterrors.UnexpectedHTTPResponseError
 							if o.SkipMissing && errors.As(err, &unexpectedHTTPResponseError) {
 								if unexpectedHTTPResponseError.StatusCode == 404 {
 									fmt.Fprintf(o.ErrOut, "warning: Image %s does not exist and will not be mirrored\n", err)
@@ -852,9 +853,9 @@ func (s *descriptorBlobSource) Open(ctx context.Context, desc distribution.Descr
 			klog.V(5).Infof("Failed to retrieve blob %s from %s: %v", desc.Digest, url, err)
 			continue
 		}
-		if !registryclient.SuccessStatus(resp.StatusCode) {
+		if !clienterrors.SuccessStatus(resp.StatusCode) {
 			resp.Body.Close()
-			if err := registryclient.HandleErrorResponse(resp); err != nil {
+			if err := clienterrors.HandleErrorResponse(resp); err != nil {
 				klog.V(5).Infof("Failed to retrieve blob %s from %s: %v", desc.Digest, url, err)
 				continue
 			}
