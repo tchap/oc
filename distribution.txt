@@ -1,3 +1,2 @@
 pkg/cli/image/mirror/mappings.go:11:	"github.com/distribution/distribution/v3/registry/client/auth"
 pkg/cli/image/mirror/mirror.go:16:	"github.com/distribution/distribution/v3/registry/client"
-pkg/cli/registry/info/info.go:9:	"github.com/distribution/distribution/v3/registry/client/transport"
