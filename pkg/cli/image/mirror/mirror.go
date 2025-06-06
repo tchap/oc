@@ -14,7 +14,6 @@ import (
 	"github.com/distribution/distribution/v3/manifest/manifestlist"
 	"github.com/distribution/distribution/v3/manifest/ocischema"
 	"github.com/distribution/distribution/v3/manifest/schema2"
-	"github.com/distribution/distribution/v3/registry/client"
 	"github.com/distribution/reference"
 	units "github.com/docker/go-units"
 	godigest "github.com/opencontainers/go-digest"
@@ -526,7 +525,7 @@ func (o *MirrorImageOptions) plan() (*plan, error) {
 						srcDigest := godigest.Digest(srcDigestString)
 						srcManifest, err := manifests.Get(ctx, godigest.Digest(srcDigest), imagemanifest.PreferManifestList)
 						if err != nil {
-							var unexpectedHTTPResponseError *client.UnexpectedHTTPResponseError
+							var unexpectedHTTPResponseError *registryclient.UnexpectedHTTPResponseError
 							if o.SkipMissing && errors.As(err, &unexpectedHTTPResponseError) {
 								if unexpectedHTTPResponseError.StatusCode == 404 {
 									fmt.Fprintf(o.ErrOut, "warning: Image %s does not exist and will not be mirrored\n", err)
@@ -853,9 +852,9 @@ func (s *descriptorBlobSource) Open(ctx context.Context, desc distribution.Descr
 			klog.V(5).Infof("Failed to retrieve blob %s from %s: %v", desc.Digest, url, err)
 			continue
 		}
-		if !client.SuccessStatus(resp.StatusCode) {
+		if !registryclient.SuccessStatus(resp.StatusCode) {
 			resp.Body.Close()
-			if err := client.HandleErrorResponse(resp); err != nil {
+			if err := registryclient.HandleErrorResponse(resp); err != nil {
 				klog.V(5).Infof("Failed to retrieve blob %s from %s: %v", desc.Digest, url, err)
 				continue
 			}
