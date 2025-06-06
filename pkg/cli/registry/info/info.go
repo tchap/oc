@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/distribution/distribution/v3/registry/client/transport"
 	"github.com/spf13/cobra"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,6 +18,7 @@ import (
 	imageclient "github.com/openshift/client-go/image/clientset/versioned"
 	"github.com/openshift/library-go/pkg/image/reference"
 	"github.com/openshift/library-go/pkg/image/registryclient"
+	"github.com/openshift/library-go/pkg/image/registryclient/transport"
 )
 
 var (
@@ -169,7 +169,7 @@ func (o *Options) Run() error {
 	case o.ShowPublic:
 		host = info.Public
 		if len(host) == 0 {
-			return fmt.Errorf("registry does not have public hostname")
+			return fmt.Errorf("regifostry does not have public hostname")
 		}
 	case o.ShowInternal:
 		host = info.Internal
