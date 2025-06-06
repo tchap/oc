@@ -25,6 +25,7 @@ import (
 	"k8s.io/kubectl/pkg/util/templates"
 
 	"github.com/openshift/api/image/docker10"
+	"github.com/openshift/library-go/pkg/image/distributionopts"
 	"github.com/openshift/library-go/pkg/image/dockerv1client"
 	"github.com/openshift/library-go/pkg/image/registryclient"
 	"github.com/openshift/oc/pkg/cli/image/imagesource"
@@ -586,13 +587,13 @@ func copyBlob(ctx context.Context, fromBlobs, toBlobs distribution.BlobService, 
 	defer r.Close()
 
 	// destination
-	mountOptions := []distribution.BlobCreateOption{WithDescriptor(layer)}
+	mountOptions := []distribution.BlobCreateOption{distributionopts.WithDescriptor(layer)}
 	if mountFrom != nil && !needLayerDigest {
 		source, err := reference.WithDigest(mountFrom, layer.Digest)
 		if err != nil {
 			return distribution.Descriptor{}, "", err
 		}
-		mountOptions = append(mountOptions, WithMountFrom(source))
+		mountOptions = append(mountOptions, distributionopts.WithMountFrom(source))
 	}
 	bw, err := toBlobs.Create(ctx, mountOptions...)
 	if err != nil {
@@ -641,42 +642,6 @@ func copyBlob(ctx context.Context, fromBlobs, toBlobs distribution.BlobService, 
 		return distribution.Descriptor{}, "", err
 	}
 	return desc, layerDigest, nil
-}
-
-type optionFunc func(interface{}) error
-
-func (f optionFunc) Apply(v interface{}) error {
-	return f(v)
-}
-
-// WithDescriptor returns a BlobCreateOption which provides the expected blob metadata.
-func WithDescriptor(desc distribution.Descriptor) distribution.BlobCreateOption {
-	return optionFunc(func(v interface{}) error {
-		opts, ok := v.(*distribution.CreateOptions)
-		if !ok {
-			return fmt.Errorf("unexpected options type: %T", v)
-		}
-		if opts.Mount.Stat == nil {
-			opts.Mount.Stat = &desc
-		}
-		return nil
-	})
-}
-
-// WithMountFrom returns a BlobCreateOption which designates that the blob should be
-// mounted from the given canonical reference.
-func WithMountFrom(ref reference.Canonical) distribution.BlobCreateOption {
-	return optionFunc(func(v interface{}) error {
-		opts, ok := v.(*distribution.CreateOptions)
-		if !ok {
-			return fmt.Errorf("unexpected options type: %T", v)
-		}
-
-		opts.Mount.ShouldMount = true
-		opts.Mount.From = ref
-
-		return nil
-	})
 }
 
 func appendFileAsLayer(ctx context.Context, name string, layers []distribution.Descriptor, config *dockerv1client.DockerImageConfig, dryRun bool, out io.Writer,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openshift/library-go/pkg/image/distributionopts"
 	"io"
 	"net/http"
 	"strings"
@@ -691,7 +692,7 @@ func copyBlob(ctx context.Context, plan *workPlan, c *repositoryBlobCopy, blob d
 			if err != nil {
 				return fmt.Errorf("unexpected error building named digest: %v", err)
 			}
-			options = append(options, client.WithMountFrom(blobSource), WithDescriptor(blob))
+			options = append(options, distributionopts.WithMountFrom(blobSource), WithDescriptor(blob))
 		}
 	}
 
