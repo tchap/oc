@@ -25,8 +25,8 @@ import (
 	"github.com/distribution/reference"
 	godigest "github.com/opencontainers/go-digest"
 
+	"github.com/openshift/library-go/pkg/image/registryclient/auth"
 	"github.com/openshift/oc/internal/http/transport"
-	"github.com/openshift/oc/internal/image/registryclient/auth"
 )
 
 type s3Driver struct {
