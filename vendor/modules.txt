@@ -194,14 +194,6 @@ github.com/distribution/distribution/v3/registry/api/errcode
 github.com/distribution/distribution/v3/registry/api/v2
 github.com/distribution/distribution/v3/registry/storage/cache
 github.com/distribution/distribution/v3/registry/storage/cache/memory
-# github.com/distribution/distribution/v3/manifest/schema1 v0.0.0-00010101000000-000000000000
-## explicit
-# github.com/distribution/distribution/v3/registry/client v0.0.0-00010101000000-000000000000 => ./internal/distribution/v3/registry/client
-## explicit; go 1.24.3
-github.com/distribution/distribution/v3/registry/client
-github.com/distribution/distribution/v3/registry/client/auth
-github.com/distribution/distribution/v3/registry/client/auth/challenge
-github.com/distribution/distribution/v3/registry/client/transport
 # github.com/distribution/reference v0.6.0
 ## explicit; go 1.20
 github.com/distribution/reference
@@ -241,8 +233,6 @@ github.com/docker/go-metrics
 # github.com/docker/go-units v0.5.0
 ## explicit
 github.com/docker/go-units
-# github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7
-## explicit
 # github.com/elazarl/goproxy v1.2.1
 ## explicit; go 1.20
 github.com/elazarl/goproxy
@@ -780,6 +770,9 @@ github.com/openshift/client-go/user/clientset/versioned/typed/user/v1
 github.com/openshift/client-go/user/clientset/versioned/typed/user/v1/fake
 # github.com/openshift/library-go v0.0.0-20250218150059-017e5b6cf27c => ../library-go
 ## explicit; go 1.24.3
+github.com/openshift/library-go/internal/distribution/v3/registry/client
+github.com/openshift/library-go/internal/distribution/v3/registry/client/auth
+github.com/openshift/library-go/internal/distribution/v3/registry/client/auth/challenge
 github.com/openshift/library-go/pkg/apiserver/jsonpatch
 github.com/openshift/library-go/pkg/apps/appsserialization
 github.com/openshift/library-go/pkg/apps/appsutil
@@ -1888,5 +1881,4 @@ sigs.k8s.io/yaml
 sigs.k8s.io/yaml/goyaml.v2
 sigs.k8s.io/yaml/goyaml.v3
 # github.com/apcera/gssapi => github.com/openshift/gssapi v0.0.0-20161010215902-5fb4217df13b
-# github.com/distribution/distribution/v3/registry/client => ./internal/distribution/v3/registry/client
 # github.com/openshift/library-go => ../library-go

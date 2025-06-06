@@ -16,12 +16,9 @@ require (
 	github.com/coreos/go-oidc/v3 v3.10.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/distribution/distribution/v3 v3.0.0
-	github.com/distribution/distribution/v3/manifest/schema1 v0.0.0-00010101000000-000000000000
-	github.com/distribution/distribution/v3/registry/client v0.0.0-00010101000000-000000000000
 	github.com/distribution/reference v0.6.0
 	github.com/docker/docker v25.0.6+incompatible
 	github.com/docker/go-units v0.5.0
-	github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7
 	github.com/elazarl/goproxy v1.2.1
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/fsouza/go-dockerclient v1.10.0
@@ -210,7 +207,5 @@ require (
 )
 
 replace github.com/apcera/gssapi => github.com/openshift/gssapi v0.0.0-20161010215902-5fb4217df13b
-
-replace github.com/distribution/distribution/v3/registry/client => ./internal/distribution/v3/registry/client
 
 replace github.com/openshift/library-go => ../library-go
