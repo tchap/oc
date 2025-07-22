@@ -25,7 +25,6 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	"github.com/blang/semver"
 	"github.com/distribution/distribution/v3"
-	"github.com/distribution/distribution/v3/manifest/manifestlist"
 	units "github.com/docker/go-units"
 	digest "github.com/opencontainers/go-digest"
 	"github.com/spf13/cobra"
@@ -945,10 +944,10 @@ func (o *InfoOptions) retrieveReleaseImages(release *ReleaseInfo, verifier image
 		FileDir:         o.FileDir,
 		SecurityOptions: o.SecurityOptions,
 		ParallelOptions: o.ParallelOptions,
-		ManifestListCallback: func(from string, list *manifestlist.DeserializedManifestList, all map[digest.Digest]distribution.Manifest) (map[digest.Digest]distribution.Manifest, error) {
+		ManifestListCallback: func(from string, list distribution.Manifest, all map[digest.Digest]distribution.Manifest) (map[digest.Digest]distribution.Manifest, error) {
 			filtered := make(map[digest.Digest]distribution.Manifest)
-			for _, manifest := range list.Manifests {
-				if !o.FilterOptions.Include(&manifest, len(list.Manifests) > 1) {
+			for _, manifest := range list.References() {
+				if !o.FilterOptions.Include(&manifest, len(list.References()) > 1) {
 					klog.V(5).Infof("Skipping image for %#v from %s", manifest.Platform, from)
 					continue
 				}

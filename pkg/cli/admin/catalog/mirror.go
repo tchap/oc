@@ -15,7 +15,6 @@ import (
 
 	"github.com/alicebob/sqlittle"
 	"github.com/distribution/distribution/v3"
-	"github.com/distribution/distribution/v3/manifest/manifestlist"
 	"github.com/joelanford/ignore"
 	"github.com/opencontainers/go-digest"
 	"github.com/spf13/cobra"
@@ -244,10 +243,10 @@ func (o *MirrorCatalogOptions) Complete(cmd *cobra.Command, args []string) error
 	retriever := &info.ImageRetriever{
 		FileDir:         o.FileDir,
 		SecurityOptions: o.SecurityOptions,
-		ManifestListCallback: func(from string, list *manifestlist.DeserializedManifestList, all map[digest.Digest]distribution.Manifest) (map[digest.Digest]distribution.Manifest, error) {
+		ManifestListCallback: func(from string, list distribution.Manifest, all map[digest.Digest]distribution.Manifest) (map[digest.Digest]distribution.Manifest, error) {
 			filtered := make(map[digest.Digest]distribution.Manifest)
-			for _, manifest := range list.Manifests {
-				if !o.FilterOptions.Include(&manifest, len(list.Manifests) > 1) {
+			for _, manifest := range list.References() {
+				if !o.FilterOptions.Include(&manifest, len(list.References()) > 1) {
 					klog.V(5).Infof("Skipping image for %#v from %s", manifest.Platform, from)
 					continue
 				}
@@ -260,7 +259,7 @@ func (o *MirrorCatalogOptions) Complete(cmd *cobra.Command, args []string) error
 			buf := &bytes.Buffer{}
 			w := tabwriter.NewWriter(buf, 0, 0, 1, ' ', 0)
 			fmt.Fprintf(w, "  OS\tDIGEST\n")
-			for _, manifest := range list.Manifests {
+			for _, manifest := range list.References() {
 				fmt.Fprintf(w, "  %s\t%s\n", imagemanifest.PlatformSpecString(manifest.Platform), manifest.Digest)
 			}
 			w.Flush()

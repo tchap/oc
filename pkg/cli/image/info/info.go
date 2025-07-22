@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/distribution/distribution/v3"
-	"github.com/distribution/distribution/v3/manifest/manifestlist"
 	units "github.com/docker/go-units"
 	digest "github.com/opencontainers/go-digest"
 	"github.com/spf13/cobra"
@@ -151,10 +150,10 @@ func (o *InfoOptions) Run() error {
 			retriever := &ImageRetriever{
 				FileDir:         o.FileDir,
 				SecurityOptions: o.SecurityOptions,
-				ManifestListCallback: func(from string, list *manifestlist.DeserializedManifestList, all map[digest.Digest]distribution.Manifest) (map[digest.Digest]distribution.Manifest, error) {
+				ManifestListCallback: func(from string, list distribution.Manifest, all map[digest.Digest]distribution.Manifest) (map[digest.Digest]distribution.Manifest, error) {
 					filtered := make(map[digest.Digest]distribution.Manifest)
-					for _, manifest := range list.Manifests {
-						if !o.FilterOptions.Include(&manifest, len(list.Manifests) > 1) {
+					for _, manifest := range list.References() {
+						if !o.FilterOptions.Include(&manifest, len(list.References()) > 1) {
 							klog.V(5).Infof("Skipping image for %#v from %s", manifest.Platform, from)
 							continue
 						}
@@ -171,7 +170,7 @@ func (o *InfoOptions) Run() error {
 					buf := &bytes.Buffer{}
 					w := tabwriter.NewWriter(buf, 0, 0, 1, ' ', 0)
 					fmt.Fprintf(w, "  OS\tDIGEST\n")
-					for _, manifest := range list.Manifests {
+					for _, manifest := range list.References() {
 						fmt.Fprintf(w, "  %s\t%s\n", imagemanifest.PlatformSpecString(manifest.Platform), manifest.Digest)
 					}
 					w.Flush()
@@ -381,7 +380,7 @@ type ImageRetriever struct {
 	// error returned processing stops. If zero manifests are returned the next item is rendered
 	// and no ImageMetadataCallback calls occur. If more than one manifest is returned
 	// ImageMetadataCallback will be invoked once for each item.
-	ManifestListCallback func(from string, list *manifestlist.DeserializedManifestList, all map[digest.Digest]distribution.Manifest) (map[digest.Digest]distribution.Manifest, error)
+	ManifestListCallback func(from string, list distribution.Manifest, all map[digest.Digest]distribution.Manifest) (map[digest.Digest]distribution.Manifest, error)
 }
 
 // Image returns a single image matching ref.
