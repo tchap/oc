@@ -311,7 +311,8 @@ func (o *AppendImageOptions) Run() error {
 func (o *AppendImageOptions) appendManifestList(ctx context.Context, createdAt *time.Time,
 	from *imagesource.TypedImageReference, to imagesource.TypedImageReference,
 	repo distribution.Repository, toRepo distribution.Repository,
-	toManifests distribution.ManifestService, filterFn imagemanifest.FilterFunc) error {
+	toManifests distribution.ManifestService, filterFn imagemanifest.FilterFunc,
+) error {
 	// process manifestlist
 	manifestMap, oldList, _, err := imagemanifest.AllManifests(ctx, from.Ref, repo)
 	// create new manifestlist from the old one swapping digest with the new ones
