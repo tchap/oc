@@ -3,6 +3,7 @@ package manifest
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -239,29 +240,34 @@ var PreferManifestList = distribution.WithManifestMediaTypes([]string{
 
 // IsManifestList returns if a given image is a manifestlist or not
 func IsManifestList(ctx context.Context, from imagereference.DockerImageReference, repo distribution.Repository) (bool, error) {
-	var srcDigest digest.Digest
-	if len(from.ID) > 0 {
-		srcDigest = digest.Digest(from.ID)
-	} else if len(from.Tag) > 0 {
-		desc, err := repo.Tags(ctx).Get(ctx, from.Tag)
-		if err != nil {
-			return false, err
-		}
-		srcDigest = desc.Digest
-	} else {
-		return false, fmt.Errorf("no tag or digest specified")
-	}
-	manifests, err := repo.Manifests(ctx)
-	if err != nil {
-		return false, err
-	}
-	srcManifest, err := manifests.Get(ctx, srcDigest, PreferManifestList)
+	srcManifest, err := GetManifestByDockerReference(ctx, from, repo)
 	if err != nil {
 		return false, err
 	}
 
 	_, ok := srcManifest.(*manifestlist.DeserializedManifestList)
 	return ok, nil
+}
+
+func GetManifestByDockerReference(ctx context.Context, from imagereference.DockerImageReference, repo distribution.Repository) (distribution.Manifest, error) {
+	var srcDigest digest.Digest
+	if len(from.ID) > 0 {
+		srcDigest = digest.Digest(from.ID)
+	} else if len(from.Tag) > 0 {
+		desc, err := repo.Tags(ctx).Get(ctx, from.Tag)
+		if err != nil {
+			return nil, fmt.Errorf("unable to get manifest by tag %s: %w", from, err)
+		}
+		srcDigest = desc.Digest
+	} else {
+		return nil, errors.New("no tag or digest specified")
+	}
+
+	manifests, err := repo.Manifests(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return manifests.Get(ctx, srcDigest, PreferManifestList)
 }
 
 // AllManifests gets all child manifests for the given reference.
