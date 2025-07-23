@@ -436,7 +436,7 @@ func (o *ImageRetriever) Images(ctx context.Context, refs map[string]imagesource
 					return callbackFn(name, nil, fmt.Errorf("unable to connect to image repository %s: %v", from, err))
 				}
 
-				allManifests, manifestList, listDigest, err := imagemanifest.AllManifests(ctx, from.Ref, repo)
+				allManifests, manifest, manifestDigest, err := imagemanifest.AllManifests(ctx, from.Ref, repo)
 				if err != nil {
 					if imagemanifest.IsImageForbidden(err) {
 						msg := fmt.Sprintf("image %q does not exist or you don't have permission to access the repository", from)
@@ -449,8 +449,8 @@ func (o *ImageRetriever) Images(ctx context.Context, refs map[string]imagesource
 					return callbackFn(name, nil, fmt.Errorf("unable to read image %s: %v", from, err))
 				}
 
-				if o.ManifestListCallback != nil && manifestList != nil {
-					allManifests, err = o.ManifestListCallback(name, manifestList, allManifests)
+				if o.ManifestListCallback != nil && imagemanifest.IsManifestContainer(manifest) {
+					allManifests, err = o.ManifestListCallback(name, manifest, allManifests)
 					if err != nil {
 						return err
 					}
@@ -466,7 +466,7 @@ func (o *ImageRetriever) Images(ctx context.Context, refs map[string]imagesource
 						return callbackFn(name, nil, contentErr)
 					}
 
-					imageConfig, layers, manifestErr := imagemanifest.ManifestToImageConfig(ctx, srcManifest, repo.Blobs(ctx), imagemanifest.ManifestLocation{ManifestList: listDigest, Manifest: srcDigest})
+					imageConfig, layers, manifestErr := imagemanifest.ManifestToImageConfig(ctx, srcManifest, repo.Blobs(ctx), imagemanifest.ManifestLocation{ManifestList: manifestDigest, Manifest: srcDigest})
 					mediaType, _, _ := srcManifest.Payload()
 					if err := callbackFn(name, &Image{
 						Name:          from.Ref.Exact(),
@@ -474,7 +474,7 @@ func (o *ImageRetriever) Images(ctx context.Context, refs map[string]imagesource
 						MediaType:     mediaType,
 						Digest:        srcDigest,
 						ContentDigest: contentDigest,
-						ListDigest:    listDigest,
+						ListDigest:    manifestDigest,
 						Config:        imageConfig,
 						Layers:        layers,
 						Manifest:      srcManifest,

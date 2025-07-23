@@ -220,15 +220,15 @@ func PlatformSpecString(platform *imagespecv1.Platform) string {
 }
 
 // IncludeAll returns true if the provided manifest matches the filter, or all if there was no filter.
-func (o *FilterOptions) IncludeAll(d *imagespecv1.Descriptor, hasMultiple bool) bool {
+func (o *FilterOptions) IncludeAll(descriptor imagespecv1.Descriptor, hasMultiple bool) bool {
 	if o.OSFilter == nil {
 		return true
 	}
-	s := PlatformSpecString(d.Platform)
+	s := PlatformSpecString(descriptor.Platform)
 	return o.OSFilter.MatchString(s)
 }
 
-type FilterFunc func(*imagespecv1.Descriptor, bool) bool
+type FilterFunc func(imagespecv1.Descriptor, bool) bool
 
 // PreferManifestList specifically requests a manifest list first
 var PreferManifestList = distribution.WithManifestMediaTypes([]string{
@@ -300,6 +300,18 @@ func AllManifests(ctx context.Context, from imagereference.DockerImageReference,
 		return nil, nil, "", fmt.Errorf("unable to gather manifests for %s: %w", from.String(), err)
 	}
 	return allManifests, srcManifest, srcDigest, nil
+}
+
+// IsManifestContainer returns true when the given manifest is a manifest list or an image index.
+func IsManifestContainer(manifest distribution.Manifest) bool {
+	switch manifest.(type) {
+	case *manifestlist.DeserializedManifestList:
+		return true
+	case *ocischema.DeserializedImageIndex:
+		return true
+	default:
+		return false
+	}
 }
 
 type ManifestLocation struct {
@@ -477,7 +489,7 @@ func ProcessManifestList(
 		// Filter according to the filter function.
 		filteredManifests := make([]manifestlist.ManifestDescriptor, 0, len(src.Manifests))
 		for _, childManifest := range src.Manifests {
-			if !filterFn(&childManifest.Descriptor, len(src.Manifests) > 1) {
+			if !filterFn(childManifest.Descriptor, len(src.Manifests) > 1) {
 				klog.V(5).Infof("Skipping image %s for %#v from %s", childManifest.Digest, childManifest.Platform, ref)
 				continue
 			}
@@ -505,7 +517,7 @@ func ProcessManifestList(
 		// Filter according to the filter function.
 		filteredManifests := make([]imagespecv1.Descriptor, 0, len(src.Manifests))
 		for _, childManifest := range src.Manifests {
-			if !filterFn(&childManifest, len(src.Manifests) > 1) {
+			if !filterFn(childManifest, len(src.Manifests) > 1) {
 				klog.V(5).Infof("Skipping image %s for %#v from %s", childManifest.Digest, childManifest.Platform, ref)
 				continue
 			}

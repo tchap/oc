@@ -5,8 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/distribution/distribution/v3/manifest/ocischema"
-	imagespecv1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"io"
 	"os"
 	"strconv"
@@ -17,10 +15,12 @@ import (
 
 	"github.com/distribution/distribution/v3"
 	"github.com/distribution/distribution/v3/manifest/manifestlist"
+	"github.com/distribution/distribution/v3/manifest/ocischema"
 	"github.com/distribution/distribution/v3/manifest/schema2"
 	"github.com/distribution/reference"
 	units "github.com/docker/go-units"
 	digest "github.com/opencontainers/go-digest"
+	imagespecv1 "github.com/opencontainers/image-spec/specs-go/v1"
 
 	"k8s.io/cli-runtime/pkg/genericiooptions"
 	kcmdutil "k8s.io/kubectl/pkg/cmd/util"
@@ -331,7 +331,7 @@ func (o *AppendImageOptions) appendManifestList(ctx context.Context, createdAt *
 	newDescriptors := make([]manifestlist.ManifestDescriptor, 0, len(oldList.Manifests))
 	for _, manifest := range oldList.Manifests {
 		// add layers only to the sub manifests that are specified by the filter
-		if !filterFn(&manifest.Descriptor, len(oldList.Manifests) > 1) {
+		if !filterFn(manifest.Descriptor, len(oldList.Manifests) > 1) {
 			klog.V(5).Infof("Skipping append for image %s for %#v from %s", manifest.Digest, manifest.Platform, from.Ref)
 		} else {
 			// create new ManifestLocation for each digest from the manifestlist
@@ -391,7 +391,7 @@ func (o *AppendImageOptions) appendImageIndex(ctx context.Context, createdAt *ti
 	newDescriptors := make([]imagespecv1.Descriptor, 0, len(oldList.Manifests))
 	for _, manifest := range oldList.Manifests {
 		// add layers only to the sub manifests that are specified by the filter
-		if !filterFn(&manifest, len(oldList.Manifests) > 1) {
+		if !filterFn(manifest, len(oldList.Manifests) > 1) {
 			klog.V(5).Infof("Skipping append for image %s for %#v from %s", manifest.Digest, manifest.Platform, from.Ref)
 		} else {
 			// create new ManifestLocation for each digest from the manifestlist
