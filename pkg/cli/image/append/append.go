@@ -293,17 +293,17 @@ func (o *AppendImageOptions) Run() error {
 		// if keep-manifest-list is enabled and the image is a manifestlist, add layers only to the filtered sub manifests specified by filter-by-os.
 		// If no filter-by-os is specified, add layers to all sub manifests
 		if o.KeepManifestList {
-			manifest, err := imagemanifest.GetManifestByDockerReference(ctx, from.Ref, repo)
+			manifest, _, err := imagemanifest.GetManifestByDockerReference(ctx, from.Ref, repo)
 			if err != nil {
 				return err
 			}
 
-			switch manifest.(type) {
+			switch fromManifest := manifest.(type) {
 			case *manifestlist.DeserializedManifestList:
-				return o.appendManifestList(ctx, createdAt, from, to, repo, toRepo, toManifests, o.FilterOptions.Include)
+				return o.appendManifestList(ctx, createdAt, from, fromManifest, to, repo, toRepo, toManifests, o.FilterOptions.Include)
 
 			case *ocischema.DeserializedImageIndex:
-				return o.appendImageIndex(ctx, createdAt, from, to, repo, toRepo, toManifests, o.FilterOptions.Include)
+				return o.appendImageIndex(ctx, createdAt, from, fromManifest, to, repo, toRepo, toManifests, o.FilterOptions.Include)
 			}
 		}
 		srcManifest, manifestLocation, err = imagemanifest.FirstManifest(ctx, from.Ref, repo, o.FilterOptions.Include)
@@ -316,18 +316,18 @@ func (o *AppendImageOptions) Run() error {
 }
 
 func (o *AppendImageOptions) appendManifestList(ctx context.Context, createdAt *time.Time,
-	from *imagesource.TypedImageReference, to imagesource.TypedImageReference,
+	from *imagesource.TypedImageReference, fromManifestList *manifestlist.DeserializedManifestList, to imagesource.TypedImageReference,
 	repo distribution.Repository, toRepo distribution.Repository,
 	toManifests distribution.ManifestService, filterFn imagemanifest.FilterFunc,
 ) error {
-	// process manifestlist
-	manifestMap, fromManifest, _, err := imagemanifest.AllManifests(ctx, from.Ref, repo)
+	// Get child manifests.
+	manifestMap, _, _, err := imagemanifest.AllManifests(ctx, from.Ref, repo)
 	if err != nil {
 		return err
 	}
-	oldList := fromManifest.(*manifestlist.DeserializedManifestList)
 
 	// create new manifestlist from the old one swapping digest with the new ones
+	oldList := fromManifestList
 	newDescriptors := make([]manifestlist.ManifestDescriptor, 0, len(oldList.Manifests))
 	for _, manifest := range oldList.Manifests {
 		// add layers only to the sub manifests that are specified by the filter
@@ -376,18 +376,18 @@ func (o *AppendImageOptions) appendManifestList(ctx context.Context, createdAt *
 }
 
 func (o *AppendImageOptions) appendImageIndex(ctx context.Context, createdAt *time.Time,
-	from *imagesource.TypedImageReference, to imagesource.TypedImageReference,
+	from *imagesource.TypedImageReference, fromImageIndex *ocischema.DeserializedImageIndex, to imagesource.TypedImageReference,
 	repo distribution.Repository, toRepo distribution.Repository,
 	toManifests distribution.ManifestService, filterFn imagemanifest.FilterFunc,
 ) error {
-	// process manifestlist
-	manifestMap, fromManifest, _, err := imagemanifest.AllManifests(ctx, from.Ref, repo)
+	// Get child manifests.
+	manifestMap, _, _, err := imagemanifest.AllManifests(ctx, from.Ref, repo)
 	if err != nil {
 		return err
 	}
-	oldList := fromManifest.(*ocischema.DeserializedImageIndex)
 
-	// create new manifestlist from the old one swapping digest with the new ones
+	// create new image index from the old one swapping digest with the new ones
+	oldList := fromImageIndex
 	newDescriptors := make([]imagespecv1.Descriptor, 0, len(oldList.Manifests))
 	for _, manifest := range oldList.Manifests {
 		// add layers only to the sub manifests that are specified by the filter
