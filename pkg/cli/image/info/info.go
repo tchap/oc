@@ -150,14 +150,15 @@ func (o *InfoOptions) Run() error {
 			retriever := &ImageRetriever{
 				FileDir:         o.FileDir,
 				SecurityOptions: o.SecurityOptions,
-				ManifestListCallback: func(from string, list distribution.Manifest, all map[digest.Digest]distribution.Manifest) (map[digest.Digest]distribution.Manifest, error) {
+				ManifestListCallback: func(from string, manifestContainer distribution.Manifest, all map[digest.Digest]distribution.Manifest) (map[digest.Digest]distribution.Manifest, error) {
 					filtered := make(map[digest.Digest]distribution.Manifest)
-					for _, manifest := range list.References() {
-						if !o.FilterOptions.Include(&manifest, len(list.References()) > 1) {
-							klog.V(5).Infof("Skipping image for %#v from %s", manifest.Platform, from)
+					descriptors := manifestContainer.References()
+					for _, descriptor := range descriptors {
+						if !o.FilterOptions.Include(descriptor, len(descriptors) > 1) {
+							klog.V(5).Infof("Skipping image for %#v from %s", descriptor.Platform, from)
 							continue
 						}
-						filtered[manifest.Digest] = all[manifest.Digest]
+						filtered[descriptor.Digest] = all[descriptor.Digest]
 					}
 					if len(filtered) == 1 {
 						return filtered, nil
@@ -170,11 +171,11 @@ func (o *InfoOptions) Run() error {
 					buf := &bytes.Buffer{}
 					w := tabwriter.NewWriter(buf, 0, 0, 1, ' ', 0)
 					fmt.Fprintf(w, "  OS\tDIGEST\n")
-					for _, manifest := range list.References() {
-						fmt.Fprintf(w, "  %s\t%s\n", imagemanifest.PlatformSpecString(manifest.Platform), manifest.Digest)
+					for _, descriptor := range descriptors {
+						fmt.Fprintf(w, "  %s\t%s\n", imagemanifest.PlatformSpecString(descriptor.Platform), descriptor.Digest)
 					}
 					w.Flush()
-					return nil, fmt.Errorf("the image is a manifest list and contains multiple images - use --filter-by-os to select from:\n\n%s\n", buf.String())
+					return nil, fmt.Errorf("the image is a manifest list and contains multiple images - use --index-filter-by-os to select from:\n\n%s\n", buf.String())
 				},
 
 				ImageMetadataCallback: func(from string, i *Image, err error) error {
@@ -376,11 +377,14 @@ type ImageRetriever struct {
 	// MaxPerRegistry is set higher than 1. If err is passed image is nil. If an error is returned
 	// execution will stop.
 	ImageMetadataCallback func(from string, image *Image, err error) error
-	// ManifestListCallback, if specified, is invoked if the root image is a manifest list. If an
-	// error returned processing stops. If zero manifests are returned the next item is rendered
+	// ManifestListCallback, if specified, is invoked if the root image is a manifest container,
+	// i.e. a manifest list or an image index. The callback must use type assertions if necessary,
+	// the possible types being *manifestlist.DeserializedManifestList or *ocischema.DeserializedImageIndex.
+	//
+	// If an error is returned, processing stops. If zero manifests are returned the next item is rendered
 	// and no ImageMetadataCallback calls occur. If more than one manifest is returned
 	// ImageMetadataCallback will be invoked once for each item.
-	ManifestListCallback func(from string, list distribution.Manifest, all map[digest.Digest]distribution.Manifest) (map[digest.Digest]distribution.Manifest, error)
+	ManifestListCallback func(from string, manifestContainer distribution.Manifest, all map[digest.Digest]distribution.Manifest) (map[digest.Digest]distribution.Manifest, error)
 }
 
 // Image returns a single image matching ref.

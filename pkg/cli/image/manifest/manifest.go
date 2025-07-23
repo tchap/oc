@@ -201,14 +201,14 @@ func (o *FilterOptions) IsWildcardFilter() bool {
 
 // Include returns true if the provided manifest should be included, or the first image if the user didn't alter the
 // default selection and there is only one image.
-func (o *FilterOptions) Include(d *imagespecv1.Descriptor, hasMultiple bool) bool {
+func (o *FilterOptions) Include(descriptor imagespecv1.Descriptor, hasMultiple bool) bool {
 	if o.OSFilter == nil {
 		return true
 	}
 	if o.DefaultOSFilter && !hasMultiple {
 		return true
 	}
-	s := PlatformSpecString(d.Platform)
+	s := PlatformSpecString(descriptor.Platform)
 	return o.OSFilter.MatchString(s)
 }
 

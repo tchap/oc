@@ -944,14 +944,15 @@ func (o *InfoOptions) retrieveReleaseImages(release *ReleaseInfo, verifier image
 		FileDir:         o.FileDir,
 		SecurityOptions: o.SecurityOptions,
 		ParallelOptions: o.ParallelOptions,
-		ManifestListCallback: func(from string, list distribution.Manifest, all map[digest.Digest]distribution.Manifest) (map[digest.Digest]distribution.Manifest, error) {
+		ManifestListCallback: func(from string, manifestContainer distribution.Manifest, all map[digest.Digest]distribution.Manifest) (map[digest.Digest]distribution.Manifest, error) {
 			filtered := make(map[digest.Digest]distribution.Manifest)
-			for _, manifest := range list.References() {
-				if !o.FilterOptions.Include(&manifest, len(list.References()) > 1) {
-					klog.V(5).Infof("Skipping image for %#v from %s", manifest.Platform, from)
+			descriptors := manifestContainer.References()
+			for _, descriptor := range descriptors {
+				if !o.FilterOptions.Include(descriptor, len(descriptors) > 1) {
+					klog.V(5).Infof("Skipping image for %#v from %s", descriptor.Platform, from)
 					continue
 				}
-				filtered[manifest.Digest] = all[manifest.Digest]
+				filtered[descriptor.Digest] = all[descriptor.Digest]
 			}
 			if len(filtered) == 1 {
 				return filtered, nil
