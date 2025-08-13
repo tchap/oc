@@ -58,21 +58,32 @@ func DefaultRsyncRemoteShellToUse(cmd *cobra.Command) string {
 func NewRsyncStrategy(o *RsyncOptions) CopyStrategy {
 	klog.V(4).Infof("Rsh command: %s", o.RshCmd)
 
-	// The blocking-io flag is used to resolve a sync issue when
-	// copying from the pod to the local machine
-	flags := []string{"--blocking-io"}
-	flags = append(flags, rsyncDefaultFlags...)
-	flags = append(flags, rsyncFlagsFromOptions(o)...)
-
 	podName := o.Source.PodName
 	if o.Source.Local() {
 		podName = o.Destination.PodName
 	}
 
+	remoteExecutor := newRemoteExecutor(o)
+
+	// The blocking-io flag is used to resolve a sync issue when
+	// copying from the pod to the local machine
+	flags := []string{"--blocking-io"}
+	flags = append(flags, rsyncDefaultFlags...)
+
+	// Generate flags including --last file limiting logic
+	lastFlags, err := rsyncFlagsFromOptionsWithLast(o, remoteExecutor)
+	if err != nil {
+		// If we can't generate the exclude patterns, fall back to basic flags
+		// and log the error, but don't fail the entire operation
+		klog.V(2).Infof("Warning: failed to apply --last filtering: %v", err)
+		lastFlags = rsyncFlagsFromOptions(o)
+	}
+	flags = append(flags, lastFlags...)
+
 	return &rsyncStrategy{
 		Flags:          flags,
 		RshCommand:     o.RshCmd,
-		RemoteExecutor: newRemoteExecutor(o),
+		RemoteExecutor: remoteExecutor,
 		LocalExecutor:  newLocalExecutor(),
 		podChecker:     podAPIChecker{o.Client, o.Namespace, podName, o.ContainerName, o.Quiet, o.ErrOut},
 	}

@@ -41,6 +41,11 @@ var (
 		If no container is specified, the first container of the pod is used
 		for the copy.
 
+		The --last flag can be used to limit the number of files copied based
+		on modification time, copying only the N most recently modified files.
+		This is useful for reducing the amount of data collected, particularly
+		in must-gather scenarios.
+
 		The following flags are passed to rsync by default:
 		--archive --no-owner --no-group --omit-dir-times --numeric-ids
 	`)
@@ -51,6 +56,9 @@ var (
 
 		# Synchronize a pod directory with a local directory
 		oc rsync POD:/remote/dir/ ./local/dir
+
+		# Copy only the 10 most recently modified files from a pod directory
+		oc rsync --last=10 POD:/remote/dir/ ./local/dir
 	`)
 
 	rsyncDefaultFlags = []string{"--archive", "--no-owner", "--no-group", "--omit-dir-times", "--numeric-ids"}
@@ -252,6 +260,9 @@ func (o *RsyncOptions) Validate() error {
 	}
 	if o.Destination.Local() && o.Watch {
 		return errors.New("\"--watch\" can only be used with a local source directory")
+	}
+	if o.RsyncLast > 0 && o.Watch {
+		return errors.New("\"--last\" cannot be used with \"--watch\"")
 	}
 	if err := o.Strategy.Validate(); err != nil {
 		return err

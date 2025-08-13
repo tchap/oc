@@ -6,7 +6,11 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"path/filepath"
 	"runtime"
+	"sort"
+	"strconv"
+	"strings"
 
 	"k8s.io/klog/v2"
 
@@ -92,6 +96,30 @@ func rsyncFlagsFromOptions(o *RsyncOptions) []string {
 	return flags
 }
 
+// rsyncFlagsFromOptionsWithLast generates rsync flags including --last file limiting logic
+func rsyncFlagsFromOptionsWithLast(o *RsyncOptions, remoteExecutor executor) ([]string, error) {
+	flags := rsyncFlagsFromOptions(o)
+
+	// Handle --last logic by generating additional exclude patterns
+	if o.RsyncLast > 0 {
+		excludePatterns, err := generateExcludePatterns(o.Source, o.RsyncLast, remoteExecutor)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate exclude patterns for --last=%d: %v", o.RsyncLast, err)
+		}
+
+		// Add the generated exclude patterns to existing excludes
+		for _, exclude := range excludePatterns {
+			flags = append(flags, fmt.Sprintf("--exclude=%s", exclude))
+		}
+
+		if len(excludePatterns) > 0 {
+			klog.V(3).Infof("Applied --last=%d: added %d exclude patterns", o.RsyncLast, len(excludePatterns))
+		}
+	}
+
+	return flags, nil
+}
+
 func tarFlagsFromOptions(o *RsyncOptions) []string {
 	flags := []string{}
 	if !o.Quiet {
@@ -127,6 +155,147 @@ func rsyncSpecificFlags(o *RsyncOptions) []string {
 		flags = append(flags, "-z")
 	}
 	return flags
+}
+
+// generateExcludePatterns discovers files in the source directory and generates
+// exclude patterns to limit the transfer to only the latest N files based on modification time.
+// It returns additional exclude patterns that should be added to the existing excludes.
+func generateExcludePatterns(source *PathSpec, last uint, remoteExecutor executor) ([]string, error) {
+	if last == 0 {
+		return nil, nil // No limit specified
+	}
+
+	var allFiles []string
+	var err error
+
+	if source.Local() {
+		allFiles, err = discoverLocalFiles(source.Path)
+	} else {
+		allFiles, err = discoverRemoteFiles(source.Path, remoteExecutor)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to discover files: %v", err)
+	}
+
+	if len(allFiles) <= int(last) {
+		// If we have fewer files than the limit, no need to exclude anything
+		return nil, nil
+	}
+
+	// Get files to exclude (all except the latest N)
+	filesToExclude := allFiles[last:]
+
+	// Convert file paths to exclude patterns relative to source
+	excludePatterns := make([]string, 0, len(filesToExclude))
+	for _, file := range filesToExclude {
+		// Convert absolute path to relative pattern for rsync
+		relativePath, err := makeRelativePath(source.Path, file)
+		if err != nil {
+			klog.V(4).Infof("Warning: failed to make relative path for %s: %v", file, err)
+			continue
+		}
+		excludePatterns = append(excludePatterns, relativePath)
+	}
+
+	klog.V(3).Infof("Generated %d exclude patterns to limit to latest %d files", len(excludePatterns), last)
+	return excludePatterns, nil
+}
+
+// discoverLocalFiles finds all files in a local directory, sorted by modification time (newest first)
+func discoverLocalFiles(basePath string) ([]string, error) {
+	cmd := exec.Command("find", basePath, "-type", "f", "-printf", "%T@ %p\n")
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute find command: %v", err)
+	}
+
+	return parseAndSortFiles(string(output))
+}
+
+// discoverRemoteFiles finds all files in a remote directory, sorted by modification time (newest first)
+func discoverRemoteFiles(basePath string, executor executor) ([]string, error) {
+	var output bytes.Buffer
+	var errOutput bytes.Buffer
+
+	// Use find to get files with timestamps, then sort by timestamp
+	cmd := []string{"find", basePath, "-type", "f", "-printf", "%T@ %p\\n"}
+	err := executor.Execute(cmd, nil, &output, &errOutput)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute remote find command: %v, stderr: %s", err, errOutput.String())
+	}
+
+	return parseAndSortFiles(output.String())
+}
+
+// parseAndSortFiles parses the output from find command and returns files sorted by modification time (newest first)
+func parseAndSortFiles(findOutput string) ([]string, error) {
+	if strings.TrimSpace(findOutput) == "" {
+		return nil, nil
+	}
+
+	lines := strings.Split(strings.TrimSpace(findOutput), "\n")
+	type fileInfo struct {
+		timestamp float64
+		path      string
+	}
+
+	files := make([]fileInfo, 0, len(lines))
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+
+		parts := strings.SplitN(line, " ", 2)
+		if len(parts) != 2 {
+			klog.V(4).Infof("Warning: skipping malformed find output line: %s", line)
+			continue
+		}
+
+		timestamp, err := strconv.ParseFloat(parts[0], 64)
+		if err != nil {
+			klog.V(4).Infof("Warning: failed to parse timestamp %s: %v", parts[0], err)
+			continue
+		}
+
+		files = append(files, fileInfo{
+			timestamp: timestamp,
+			path:      parts[1],
+		})
+	}
+
+	// Sort by timestamp (newest first)
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].timestamp > files[j].timestamp
+	})
+
+	// Extract just the file paths
+	result := make([]string, len(files))
+	for i, file := range files {
+		result[i] = file.path
+	}
+
+	return result, nil
+}
+
+// makeRelativePath converts an absolute file path to a path relative to the base directory
+func makeRelativePath(basePath, filePath string) (string, error) {
+	// Clean the paths to handle any ".." or extra slashes
+	cleanBase := filepath.Clean(basePath)
+	cleanFile := filepath.Clean(filePath)
+
+	// Check if the file is actually under the base path
+	if !strings.HasPrefix(cleanFile, cleanBase) {
+		return "", fmt.Errorf("file %s is not under base path %s", filePath, basePath)
+	}
+
+	// Calculate relative path
+	rel, err := filepath.Rel(cleanBase, cleanFile)
+	if err != nil {
+		return "", err
+	}
+
+	return rel, nil
 }
 
 type podAPIChecker struct {

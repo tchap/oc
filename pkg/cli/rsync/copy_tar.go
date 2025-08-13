@@ -41,14 +41,31 @@ func NewTarStrategy(o *RsyncOptions) CopyStrategy {
 	tarHelper.SetExclusionPattern(nil)
 
 	ignoredFlags := rsyncSpecificFlags(o)
-
 	remoteExec := newRemoteExecutor(o)
+
+	// Handle --last option by generating additional exclude patterns
+	excludes := make([]string, len(o.RsyncExclude))
+	copy(excludes, o.RsyncExclude)
+
+	if o.RsyncLast > 0 {
+		excludePatterns, err := generateExcludePatterns(o.Source, o.RsyncLast, remoteExec)
+		if err != nil {
+			klog.V(2).Infof("Warning: failed to apply --last filtering for tar strategy: %v", err)
+		} else {
+			excludes = append(excludes, excludePatterns...)
+			if len(excludePatterns) > 0 {
+				klog.V(3).Infof("Applied --last=%d to tar strategy: added %d exclude patterns", o.RsyncLast, len(excludePatterns))
+			}
+		}
+		// Add --last to ignored flags since tar doesn't natively support it
+		ignoredFlags = append(ignoredFlags, "--last")
+	}
 
 	return &tarStrategy{
 		Quiet:          o.Quiet,
 		Delete:         o.Delete,
 		Includes:       o.RsyncInclude,
-		Excludes:       o.RsyncExclude,
+		Excludes:       excludes,
 		Tar:            tarHelper,
 		RemoteExecutor: remoteExec,
 		IgnoredFlags:   ignoredFlags,

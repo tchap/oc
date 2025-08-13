@@ -286,9 +286,18 @@ func (s *rsyncDaemonStrategy) Validate() error {
 // NewRsyncDaemonStrategy returns a copy strategy that starts and uses an rsync daemon in the remote pod.
 func NewRsyncDaemonStrategy(o *RsyncOptions) CopyStrategy {
 	flags := rsyncDefaultFlags
-	flags = append(flags, rsyncFlagsFromOptions(o)...)
 
 	remoteExec := newRemoteExecutor(o)
+
+	// Generate flags including --last file limiting logic
+	lastFlags, err := rsyncFlagsFromOptionsWithLast(o, remoteExec)
+	if err != nil {
+		// If we can't generate the exclude patterns, fall back to basic flags
+		// and log the error, but don't fail the entire operation
+		klog.V(2).Infof("Warning: failed to apply --last filtering for rsync-daemon strategy: %v", err)
+		lastFlags = rsyncFlagsFromOptions(o)
+	}
+	flags = append(flags, lastFlags...)
 
 	forwarder := newPortForwarder(o)
 
