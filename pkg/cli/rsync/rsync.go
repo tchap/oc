@@ -95,6 +95,7 @@ type RsyncOptions struct {
 	RshCmd        string
 	RsyncInclude  []string
 	RsyncExclude  []string
+	RsyncLast     uint
 	RsyncProgress bool
 	RsyncNoPerms  bool
 
@@ -133,6 +134,7 @@ func NewCmdRsync(f kcmdutil.Factory, streams genericiooptions.IOStreams) *cobra.
 	cmd.Flags().BoolVar(&o.Delete, "delete", false, "If true, delete files not present in source")
 	cmd.Flags().StringSliceVar(&o.RsyncExclude, "exclude", nil, "When specified, exclude files matching pattern")
 	cmd.Flags().StringSliceVar(&o.RsyncInclude, "include", nil, "When specified, include files matching pattern")
+	cmd.Flags().UintVar(&o.RsyncLast, "last", 0, "When specified, copy only N latest files")
 	cmd.Flags().BoolVar(&o.RsyncProgress, "progress", false, "If true, show progress during transfer")
 	cmd.Flags().BoolVar(&o.RsyncNoPerms, "no-perms", false, "If true, do not transfer permissions")
 	cmd.Flags().BoolVarP(&o.Watch, "watch", "w", false, "Watch directory for changes and resync automatically")
