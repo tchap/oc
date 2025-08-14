@@ -57,12 +57,6 @@ func DefaultRsyncRemoteShellToUse(cmd *cobra.Command) string {
 // NewRsyncStrategy returns a copy strategy that uses rsync.
 func NewRsyncStrategy(o *RsyncOptions) CopyStrategy {
 	klog.V(4).Infof("Rsh command: %s", o.RshCmd)
-
-	podName := o.Source.PodName
-	if o.Source.Local() {
-		podName = o.Destination.PodName
-	}
-
 	remoteExecutor := newRemoteExecutor(o)
 
 	// The blocking-io flag is used to resolve a sync issue when
@@ -79,6 +73,11 @@ func NewRsyncStrategy(o *RsyncOptions) CopyStrategy {
 		lastFlags = rsyncFlagsFromOptions(o)
 	}
 	flags = append(flags, lastFlags...)
+
+	podName := o.Source.PodName
+	if o.Source.Local() {
+		podName = o.Destination.PodName
+	}
 
 	return &rsyncStrategy{
 		Flags:          flags,
