@@ -57,7 +57,6 @@ func DefaultRsyncRemoteShellToUse(cmd *cobra.Command) string {
 // NewRsyncStrategy returns a copy strategy that uses rsync.
 func NewRsyncStrategy(o *RsyncOptions) CopyStrategy {
 	klog.V(4).Infof("Rsh command: %s", o.RshCmd)
-	remoteExecutor := newRemoteExecutor(o)
 
 	// The blocking-io flag is used to resolve a sync issue when
 	// copying from the pod to the local machine
@@ -65,6 +64,7 @@ func NewRsyncStrategy(o *RsyncOptions) CopyStrategy {
 	flags = append(flags, rsyncDefaultFlags...)
 
 	// Generate flags including --last file limiting logic
+	remoteExecutor := newRemoteExecutor(o)
 	lastFlags, err := rsyncFlagsFromOptionsWithLast(o, remoteExecutor)
 	if err != nil {
 		// If we can't generate the exclude patterns, fall back to basic flags
