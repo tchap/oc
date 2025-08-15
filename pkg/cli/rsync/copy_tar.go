@@ -44,10 +44,27 @@ func NewTarStrategy(o *RsyncOptions) CopyStrategy {
 
 	remoteExec := newRemoteExecutor(o)
 
+	// Handle --last option by discovering the latest N files.
+	includes := append([]string(nil), o.RsyncInclude...)
+	if o.RsyncLast > 0 {
+		filenames, err := o.fileDiscovery.DiscoverFiles(o.Source.Path, o.RsyncLast)
+		if err != nil {
+			klog.V(2).Infof("Warning: failed to apply --last filtering: %v", err)
+		} else {
+			// For tar strategy, we replace any existing includes with our filtered list.
+			if len(filenames) > 0 {
+				includes = filenames
+				klog.V(3).Infof("Applied --last=%d to tar strategy: using %d files", o.RsyncLast, len(filenames))
+			}
+		}
+		// Add --last to ignored flags since tar doesn't natively support it.
+		ignoredFlags = append(ignoredFlags, "--last")
+	}
+
 	return &tarStrategy{
 		Quiet:          o.Quiet,
 		Delete:         o.Delete,
-		Includes:       o.RsyncInclude,
+		Includes:       includes,
 		Excludes:       o.RsyncExclude,
 		Tar:            tarHelper,
 		RemoteExecutor: remoteExec,

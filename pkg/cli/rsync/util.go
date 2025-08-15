@@ -89,7 +89,43 @@ func rsyncFlagsFromOptions(o *RsyncOptions) []string {
 	if o.RsyncNoPerms {
 		flags = append(flags, "--no-perms")
 	}
+
+	// Generate additional flags for --last.
+	lastFlags, err := rsyncLastFlags(o)
+	if err != nil {
+		// If we can't generate the include patterns, fall back to basic flags
+		// and log the error, but don't fail the entire operation.
+		klog.Infof("Warning: failed to apply --last filtering: %v", err)
+	} else {
+		flags = append(flags, lastFlags...)
+	}
 	return flags
+}
+
+// rsyncLastFlags generates rsync flags for the --last option by creating include patterns for the N most recently modified files.
+func rsyncLastFlags(o *RsyncOptions) ([]string, error) {
+	if o.RsyncLast <= 0 {
+		return nil, nil
+	}
+
+	// Handle --last logic by discovering the latest N files.
+	filenames, err := o.fileDiscovery.DiscoverFiles(o.Source.Path, o.RsyncLast)
+	if err != nil {
+		return nil, fmt.Errorf("failed to discover files for --last=%d: %w", o.RsyncLast, err)
+	}
+
+	// Add include patterns for the discovered files.
+	flags := make([]string, 0, len(filenames)+1)
+	for _, filename := range filenames {
+		flags = append(flags, fmt.Sprintf("--include=%s", filename))
+	}
+
+	// Add exclude all to ensure only included files are copied.
+	if len(filenames) > 0 {
+		flags = append(flags, "--exclude=*")
+		klog.V(3).Infof("Applied --last=%d: added %d include patterns", o.RsyncLast, len(filenames))
+	}
+	return flags, nil
 }
 
 func tarFlagsFromOptions(o *RsyncOptions) []string {
