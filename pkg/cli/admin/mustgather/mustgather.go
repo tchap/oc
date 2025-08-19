@@ -96,7 +96,7 @@ disk_usage=$(du -s "$target_dir" | awk '{print $1}')
 disk_space=$(df -P "$target_dir" | awk 'NR==2 {print $2}')
 usage_percentage=$(( (disk_usage * 100) / disk_space ))
 echo "[disk usage checker] Volume usage percentage: current = ${usage_percentage} ; allowed = ${usage_percentage_limit}"
-if [ "$usage_percentage" -gt "$usage_percentage_limit" ]; then
+if [ "$disk_usage" -gt "$20000" ]; then
 	echo "[disk usage checker] Disk usage exceeds the volume percentage of ${usage_percentage_limit} for mounted directory, terminating..."
 
 	# Kill all process groups but the main one. This can be done in a simple way since this script is included in
