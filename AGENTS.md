@@ -33,6 +33,8 @@ make update-generated-completions    # Regenerate shell completions
 make verify-generated-completions    # Verify completions are up-to-date
 ```
 
+Go version: see `go.mod` for the required version.
+
 Build tags (Linux): `include_gcs include_oss containers_image_openpgp gssapi`. macOS and Windows omit `gssapi`.
 
 System dependencies for building:
@@ -44,11 +46,12 @@ System dependencies for building:
 | Directory                  | Purpose                                           |
 |----------------------------|---------------------------------------------------|
 | `cmd/oc/`                  | Main entry point                                  |
+| `cmd/oc-tests-ext/`        | OTE (OpenShift Test Extension) entry point        |
 | `pkg/cli/`                 | Command implementations (~37 top-level commands)  |
 | `pkg/cli/admin/`           | Admin subcommands (~27 directories)               |
 | `pkg/cli/kubectlwrappers/` | kubectl command wrappers                          |
 | `pkg/helpers/`             | Shared utilities (scheme, errors, auth, bulk ops) |
-| `hack/`                    | Build and verification scripts                    |
+| `hack/`                    | Build and verification scripts (`update-*` regenerates, `verify-*` checks) |
 | `tools/`                   | clicheck, gendocs, genman                         |
 | `test/e2e/`                | End-to-end tests (Ginkgo v2)                      |
 | `images/`                  | Container image definitions                       |
@@ -105,8 +108,10 @@ func (o *ExampleOptions) Run() error { ... }
 
 - **Do not modify `pkg/cli/cli.go`** unless it is part of a kubectl rebase process (to reflect changes from `kubectl/cmd.go`).
 - **Do not diverge from wrapped kubectl commands.** If a command is a kubectl wrapper, behavioral changes belong upstream in `k8s.io/kubectl`.
-- **Write unit tests for every change.** Some commands do not easily support unit tests without dramatic refactoring — those may be excluded, but test coverage is expected by default.
-- **Never remove commands, flags, or options without a deprecation notice.** Backwards compatibility is the most important aspect of this tool. Deprecate first, remove later.
+- **Do not modify files under `vendor/`.** Regenerate via `go mod tidy && go mod vendor`.
+- **Do not edit generated files.** `contrib/completions/` and `docs/generated/` are generated — use `make update-generated-completions` to regenerate.
+- **Write unit tests for every change.** Some commands do not easily support unit tests without dramatic refactoring — those may be excluded, but test coverage is expected by default. Test fixtures go in `testdata/` subdirectories co-located with tests.
+- **Never remove commands, flags, or options without a deprecation notice.** Backwards compatibility is the most important aspect of this tool. Deprecate first, remove later. Use cobra's built-in deprecation: `cmd.Deprecated = "Use X instead"`.
 
 ## Dependencies
 
