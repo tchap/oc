@@ -83,7 +83,7 @@ func NewInfo(f kcmdutil.Factory, streams genericiooptions.IOStreams) *cobra.Comm
 	flags.StringVar(&o.FileDir, "dir", o.FileDir, "The directory on disk that file:// images will be read from.")
 	flags.StringVar(&o.ICSPFile, "icsp-file", o.ICSPFile, "Path to an ImageContentSourcePolicy file.  If set, data from this file will be used to find alternative locations for images.")
 	flags.MarkDeprecated("icsp-file", "support for it will be removed in a future release. Use --idms-file instead.")
-	flags.StringVar(&o.IDMSFile, "idms-file", o.IDMSFile, "Path to an ImageDigestMirrorSet file. If set, data from this file will be used to find alternative locations for images.")
+	flags.StringVar(&o.IDMSFile, "idms-file", o.IDMSFile, "Path to an ImageDigestMirrorSet file. If set, data from this file will be used to find alternative locations for images. Mirrors will be tried first.")
 	flags.BoolVar(&o.ShowMultiArch, "show-multiarch", o.ShowMultiArch, "Show information even if the image is multiarch image. If not set, error is thrown for multiarch images.")
 
 	return cmd
